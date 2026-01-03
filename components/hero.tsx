@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import Image from "next/image"
+import backgroundImage from "../assets/fantasy-couple-getting-married.jpg"
 
 export default function Hero() {
   const containerVariants = {
@@ -28,7 +29,7 @@ export default function Hero() {
     <section className="relative w-full h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <Image
-        src="/cinematic-dark-photography-studio-hero.jpg"
+        src={backgroundImage}
         alt="Photography Studio Hero"
         fill
         className="object-cover"

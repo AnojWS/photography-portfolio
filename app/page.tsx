@@ -7,7 +7,7 @@ import Contact from "@/components/contact"
 
 export default function Home() {
   return (
-    <main className="w-full overflow-x-hidden">
+    <main className="w-full">
       <Navigation />
       <Hero />
       <Gallery />
