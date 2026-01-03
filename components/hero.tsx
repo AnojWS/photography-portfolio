@@ -1,10 +1,28 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import backgroundImage from "../assets/fantasy-couple-getting-married.jpg"
+import backgroundImage1 from "../assets/fantasy-couple-getting-married.jpg"
+import backgroundImage2 from "../assets/loving-couple-holding-umbrella.jpg"
+import backgroundImage3 from "../assets/man-woman-having-beach-wedding.jpg"
 
 export default function Hero() {
+  const images = [backgroundImage1, backgroundImage2, backgroundImage3]
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTransitioning(true)
+      setTimeout(() => {
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length)
+        setIsTransitioning(false)
+      }, 750) // Half of the transition duration for darkening effect
+    }, 5000) // Change image every 5 seconds
+    return () => clearInterval(interval)
+  }, [images.length])
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -27,17 +45,39 @@ export default function Hero() {
 
   return (
     <section className="relative w-full h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
-      <Image
-        src={backgroundImage}
-        alt="Photography Studio Hero"
-        fill
-        className="object-cover"
-        priority
-      />
+      {/* Preload Images */}
+      <div style={{ display: "none" }}>
+        {images.map((image, index) => (
+          <Image key={index} src={image} alt={`Preload ${index}`} priority />
+        ))}
+      </div>
+
+      {/* Background Image Slideshow */}
+      <AnimatePresence>
+        <motion.div
+          key={currentImageIndex}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.5 }}
+          className="absolute inset-0"
+        >
+          <Image
+            src={images[currentImageIndex]}
+            alt={`Photography Studio Hero ${currentImageIndex + 1}`}
+            fill
+            className="object-cover"
+            priority
+          />
+        </motion.div>
+      </AnimatePresence>
 
       {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-black/40" />
+      <motion.div
+        className="absolute inset-0 bg-black/40"
+        animate={{ opacity: isTransitioning ? 0.8 : 0.4 }}
+        transition={{ duration: 0.75 }}
+      />
 
       {/* Content */}
       <motion.div
