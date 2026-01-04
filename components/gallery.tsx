@@ -1,125 +1,184 @@
 "use client"
 
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useRef } from "react"
+import { motion, useInView, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { X } from "lucide-react"
-import SectionWrapper from "./section-wrapper"
+import { X, ArrowUpRight } from "lucide-react"
+import SectionWrapper from "./section-wrapper" // Assuming this exists, or remove if not needed
+import { cn } from "@/lib/utils"
 
-interface GalleryItem {
-  id: string
-  src: string
-  alt: string
-  title: string
-}
-
-const galleryItems: GalleryItem[] = [
-  { id: "1", src: "/wedding-photography-elegant.jpg", alt: "Wedding ceremony", title: "Timeless Wedding" },
-  { id: "2", src: "/portrait-photography-studio.jpg", alt: "Professional portrait", title: "Studio Portrait" },
-  { id: "3", src: "/landscape-photography-sunset.jpg", alt: "Golden hour landscape", title: "Golden Hour" },
-  { id: "4", src: "/event-photography-celebration.jpg", alt: "Event celebration", title: "Celebration Moment" },
-  { id: "5", src: "/fashion-photography-editorial.jpg", alt: "Fashion editorial", title: "Editorial Collection" },
-  { id: "6", src: "/travel-photography-adventure.jpg", alt: "Travel photography", title: "World Travels" },
+// Defining specific sizes for the layout to match the video composition
+// The layout is: Left Stack (2 imgs) | Center Big (1 img) | Right Stack (2 imgs)
+const galleryImages = [
+  // Left Column Top
+  {
+    id: "1",
+    src: "/wedding-photography-elegant.jpg",
+    title: "The Preparation",
+    category: "Backstage",
+    className: "h-64 md:h-[280px]", 
+  },
+  // Left Column Bottom
+  {
+    id: "2",
+    src: "/tools-closeup.jpg", // changed to match "video" context (details)
+    title: "Fine Details",
+    category: "Close-up",
+    className: "h-64 md:h-[320px]",
+  },
+  // Center Hero Image
+  {
+    id: "3",
+    src: "/portrait-photography-studio.jpg",
+    title: "The Masterpiece",
+    category: "Portrait",
+    className: "h-64 md:h-[624px]", // Full height of the two side stacks + gap
+  },
+  // Right Column Top
+  {
+    id: "4",
+    src: "/event-photography-celebration.jpg",
+    title: "In Motion",
+    category: "Action",
+    className: "h-64 md:h-[320px]",
+  },
+  // Right Column Bottom
+  {
+    id: "5",
+    src: "/fashion-photography-editorial.jpg",
+    title: "Styling",
+    category: "Fashion",
+    className: "h-64 md:h-[280px]",
+  },
 ]
 
-export default function Gallery() {
+export default function SmoothGallery() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  
+  // Ref for scroll activation
+  const containerRef = useRef(null)
+  const isInView = useInView(containerRef, { once: true, amount: 0.2 })
 
   return (
-    <SectionWrapper id="gallery" className="py-20 px-6" style={{ backgroundColor: "#1a1a1a" }}>
-      <div className="max-w-7xl mx-auto">
+    <SectionWrapper id="gallery" className="py-24 bg-[#0a0a0a] overflow-hidden">
+      {/* Container is wider now (max-w-[1800px]) to fill more screen real estate */}
+      <div className="w-full max-w-[1800px] mx-auto px-4 md:px-8">
+        
+        {/* Header Text */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
+          initial={{ opacity: 0, y: 40 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-16 md:mb-24 flex flex-col md:flex-row md:items-end justify-between gap-6"
         >
-          <h2 className="text-5xl font-serif font-bold text-foreground mb-4">Our Work</h2>
-          <p className="text-foreground/60 max-w-2xl mx-auto">
-            A curated selection of our most compelling photography projects
+          <div>
+            <h2 className="text-4xl md:text-7xl font-bold text-white tracking-tight">
+              Visual <span className="text-neutral-500">Narratives</span>
+            </h2>
+          </div>
+          <p className="text-neutral-400 max-w-md text-lg leading-relaxed">
+            Capturing moments with a cinematic perspective. Explore the collection.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {galleryItems.map((item, index) => (
-            <motion.div
-              key={item.id}
-              layoutId={`gallery-${item.id}`}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              onClick={() => setSelectedId(item.id)}
-              className="relative cursor-pointer group overflow-hidden rounded-lg"
-            >
-              <motion.div
-                whileHover={{ scale: 1.08 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="relative aspect-[4/5] bg-background overflow-hidden"
-              >
-                <Image
-                  src={item.src || "/placeholder.svg"}
-                  alt={item.alt}
-                  fill
-                  className="object-cover group-hover:brightness-75 transition-all duration-500"
-                />
+        {/* CUSTOM GRID LAYOUT 
+          Using Flexbox for mobile, CSS Grid for Desktop
+          Grid is 12 columns: 3 (Left) - 6 (Center) - 3 (Right)
+        */}
+        <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+          
+          {/* --- LEFT COLUMN (Stack of 2) --- */}
+          <div className="md:col-span-3 flex flex-col gap-4 md:gap-6">
+             <GalleryCard item={galleryImages[0]} index={0} isInView={isInView} setSelectedId={setSelectedId} />
+             <GalleryCard item={galleryImages[1]} index={1} isInView={isInView} setSelectedId={setSelectedId} />
+          </div>
 
-                {/* Overlay on Hover */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute inset-0 bg-black/40 flex items-end justify-start p-6"
-                >
-                  <div>
-                    <p className="text-foreground text-lg font-serif font-bold">{item.title}</p>
-                  </div>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          ))}
+          {/* --- CENTER COLUMN (Hero Image) --- */}
+          <div className="md:col-span-6">
+            <GalleryCard item={galleryImages[2]} index={2} isInView={isInView} setSelectedId={setSelectedId} priority />
+          </div>
+
+          {/* --- RIGHT COLUMN (Stack of 2) --- */}
+          <div className="md:col-span-3 flex flex-col gap-4 md:gap-6">
+            <GalleryCard item={galleryImages[3]} index={3} isInView={isInView} setSelectedId={setSelectedId} />
+            <GalleryCard item={galleryImages[4]} index={4} isInView={isInView} setSelectedId={setSelectedId} />
+          </div>
+
         </div>
       </div>
 
-      {/* Lightbox Modal */}
+      {/* Full Screen Overlay */}
       <AnimatePresence>
         {selectedId && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedId(null)}
-          >
+          <div className="fixed inset-0 z-[100] flex items-center justify-center pr-4 md:pr-0">
             <motion.div
-              layoutId={`gallery-${selectedId}`}
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedId(null)}
+              className="absolute inset-0 bg-black/95 backdrop-blur-xl"
+            />
+            <motion.div
+              layoutId={`card-${selectedId}`}
+              className="relative w-full max-w-6xl aspect-[16/9] md:aspect-[21/9] mx-4 overflow-hidden rounded-lg shadow-2xl"
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-4xl"
             >
               <Image
-                src={
-                  galleryItems.find((item) => item.id === selectedId)?.src || "/placeholder.svg" || "/placeholder.svg"
-                }
-                alt="Gallery item"
-                width={800}
-                height={600}
-                className="w-full h-auto rounded-lg"
+                src={galleryImages.find((img) => img.id === selectedId)?.src || ""}
+                alt="Selected"
+                fill
+                className="object-cover"
               />
               <button
                 onClick={() => setSelectedId(null)}
-                className="absolute top-4 right-4 bg-background/80 hover:bg-background text-foreground rounded-full p-2 transition-colors"
+                className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors"
               >
                 <X size={24} />
               </button>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </SectionWrapper>
+  )
+}
+
+// Sub-component for individual cards to keep code clean
+function GalleryCard({ item, index, isInView, setSelectedId, priority = false }: any) {
+  return (
+    <motion.div
+      layoutId={`card-${item.id}`}
+      initial={{ opacity: 0, y: 100, scale: 0.9 }}
+      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{
+        duration: 1.2,
+        delay: index * 0.15, // Stagger effect
+        ease: [0.25, 1, 0.5, 1], // Custom cubic-bezier for "Smooth" feel
+      }}
+      onClick={() => setSelectedId(item.id)}
+      className={cn(
+        "relative w-full overflow-hidden rounded-xl bg-neutral-900 cursor-pointer group",
+        item.className
+      )}
+    >
+      <Image
+        src={item.src || "/placeholder.svg"}
+        alt={item.title}
+        fill
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        priority={priority}
+      />
+      
+      {/* Hover Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6 md:p-8">
+        <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+          <p className="text-neutral-400 text-sm font-medium tracking-widest uppercase mb-2">{item.category}</p>
+          <div className="flex items-center justify-between">
+            <h3 className="text-white text-2xl font-semibold">{item.title}</h3>
+            <ArrowUpRight className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100" />
+          </div>
+        </div>
+      </div>
+    </motion.div>
   )
 }
